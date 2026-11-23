@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { AuthProvider } from "@/contexts/auth-context"
 import { AIChatAssistant } from "@/components/ai-chat-assistant"
+import { PiSdkInit } from "@/components/pi-sdk-init"
 import Script from "next/script"
 import "./globals.css"
 
@@ -22,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <Script src="https://sdk.minepi.com/pi-sdk.js" strategy="beforeInteractive" />
+        <Script src="https://sdk.minepi.com/pi-sdk.js" strategy="afterInteractive" />
         <style>{`
 html {
   font-family: ${GeistSans.style.fontFamily};
@@ -33,6 +34,7 @@ html {
       </head>
       <body>
         <AuthProvider>
+          <PiSdkInit />
           {children}
           <AIChatAssistant />
         </AuthProvider>

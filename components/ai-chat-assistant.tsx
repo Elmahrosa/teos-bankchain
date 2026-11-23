@@ -290,7 +290,7 @@ export function AIChatAssistant() {
         <Button
           onClick={() => setIsOpen(true)}
           size="lg"
-          className="fixed bottom-24 right-4 z-50 h-14 w-14 rounded-full shadow-2xl hover:scale-110 transition-transform bg-gradient-to-br from-primary to-primary/80"
+          className="fixed bottom-4 right-4 z-40 h-12 w-12 rounded-full shadow-2xl hover:scale-110 transition-transform bg-gradient-to-br from-primary to-primary/80 sm:bottom-6 sm:h-14 sm:w-14"
         >
           <div className="relative">
             <MessageCircle className="w-6 h-6" />
@@ -300,7 +300,7 @@ export function AIChatAssistant() {
       )}
 
       {isOpen && (
-        <Card className="fixed bottom-24 right-4 z-50 w-[calc(100vw-2rem)] max-w-md h-[32rem] flex flex-col shadow-2xl border-2 border-primary/20">
+        <Card className="fixed bottom-4 right-4 z-40 w-[calc(100vw-2rem)] max-w-md h-[min(32rem,calc(100dvh-6rem))] flex flex-col shadow-2xl border-2 border-primary/20 sm:bottom-6">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-primary to-primary/90">
             <div className="flex items-center gap-3">

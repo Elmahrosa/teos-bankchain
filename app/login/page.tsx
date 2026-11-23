@@ -90,7 +90,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/10 flex flex-col items-center justify-center p-4 pb-24 sm:pb-4">
       <div className="w-full max-w-md mb-4">
         <Alert className="bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
           <AlertDescription className="text-center text-sm text-amber-900 dark:text-amber-100">
@@ -126,13 +126,13 @@ export default function LoginPage() {
             {isLoading ? "Connecting..." : !sdkReady ? "Waiting for Pi SDK..." : "Connect Pi Wallet"}
           </Button>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Button onClick={handleDemoMode} variant="outline" className="h-11 bg-transparent" disabled={isLoading}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Button onClick={handleDemoMode} variant="outline" className="h-11 w-full bg-transparent" disabled={isLoading}>
               <TestTube className="w-4 h-4 mr-2" />
               Use Demo Mode
             </Button>
 
-            <Button asChild variant="outline" className="h-11 bg-transparent">
+            <Button asChild variant="outline" className="h-11 w-full bg-transparent">
               <Link href="/founder-login">
                 <Crown className="w-4 h-4 mr-2" />
                 Founder Dashboard
