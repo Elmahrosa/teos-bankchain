@@ -1,6 +1,7 @@
 import type { UserRole, Permission } from "./types"
 
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+  founder: [{ resource: "*", actions: ["create", "read", "update", "delete"] }],
   bank_admin: [{ resource: "*", actions: ["create", "read", "update", "delete"] }],
   compliance_officer: [
     { resource: "transactions", actions: ["read"] },
@@ -78,7 +79,7 @@ export class RBACService {
    * Check if role can access admin dashboard
    */
   static canAccessAdminDashboard(role: UserRole): boolean {
-    return ["bank_admin", "compliance_officer", "operations"].includes(role)
+    return ["founder", "bank_admin", "compliance_officer", "operations"].includes(role)
   }
 
   /**
@@ -86,6 +87,7 @@ export class RBACService {
    */
   static getApprovalTier(role: UserRole): number {
     const tiers: Record<UserRole, number> = {
+      founder: 3,
       bank_admin: 3,
       compliance_officer: 2,
       operations: 1,

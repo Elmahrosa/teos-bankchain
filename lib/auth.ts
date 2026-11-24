@@ -1,5 +1,7 @@
 // Authentication and role-based access control utilities
-export type UserRole = "bank_admin" | "compliance_officer" | "operations" | "business" | "individual" | "agent"
+import { isPiBrowser, piLogin } from "@/src/pi"
+
+export type UserRole = "founder" | "bank_admin" | "compliance_officer" | "operations" | "business" | "individual" | "agent"
 
 export interface User {
   id: string
@@ -24,6 +26,7 @@ export interface AuthToken {
 
 // Role-based permission definitions
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
+  founder: ["*"],
   bank_admin: [
     "view_all_transactions",
     "approve_high_value",
@@ -48,6 +51,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
 }
 
 export const APPROVAL_TIERS: Record<UserRole, number> = {
+  founder: 3,
   bank_admin: 3,
   compliance_officer: 3,
   operations: 2,
@@ -57,6 +61,7 @@ export const APPROVAL_TIERS: Record<UserRole, number> = {
 }
 
 export const TRANSACTION_LIMITS: Record<UserRole, { single: number; daily: number }> = {
+  founder: { single: Number.POSITIVE_INFINITY, daily: Number.POSITIVE_INFINITY },
   bank_admin: { single: Number.POSITIVE_INFINITY, daily: Number.POSITIVE_INFINITY },
   compliance_officer: { single: Number.POSITIVE_INFINITY, daily: Number.POSITIVE_INFINITY },
   operations: { single: 1000000, daily: 5000000 },
@@ -249,23 +254,21 @@ export class PiBrowserService {
       return { isPiBrowser: false, piSDKAvailable: false }
     }
 
-    const isPiBrowser = /PiBrowser/i.test(navigator.userAgent)
-    const piSDKAvailable = typeof (window as any).Pi !== "undefined"
+    const inPiBrowser = /PiBrowser/i.test(navigator.userAgent)
+    const piSDKAvailable = !!isPiBrowser()
 
     return {
-      isPiBrowser,
+      isPiBrowser: inPiBrowser,
       piSDKAvailable,
       piUser: piSDKAvailable ? (window as any).Pi?.user : undefined,
     }
   }
 
   static async authenticateWithPi(): Promise<string | null> {
-    const { piSDKAvailable } = this.detectPiBrowser()
-    if (!piSDKAvailable) return null
+    if (!isPiBrowser()) return null
 
     try {
-      const scopes = ["username", "payments"]
-      const authResult = await (window as any).Pi.authenticate(scopes, onIncompletePaymentFound)
+      const authResult = await piLogin()
       return authResult.accessToken
     } catch (error) {
       console.error("[v0] Pi authentication error:", error)

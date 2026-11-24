@@ -4,8 +4,6 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { AuthProvider } from "@/contexts/auth-context"
 import { AIChatAssistant } from "@/components/ai-chat-assistant"
-import { PiSdkInit } from "@/components/pi-sdk-init"
-import Script from "next/script"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -23,7 +21,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <Script src="https://sdk.minepi.com/pi-sdk.js" strategy="afterInteractive" />
+        <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+window.PI_READY = false;
+try {
+  if (window.Pi) {
+    Pi.init({ version: "2.0", sandbox: true });
+    window.PI_READY = true;
+  }
+} catch(e) { console.log("Pi init failed", e); }
+            `,
+          }}
+        />
         <style>{`
 html {
   font-family: ${GeistSans.style.fontFamily};
@@ -34,7 +45,6 @@ html {
       </head>
       <body>
         <AuthProvider>
-          <PiSdkInit />
           {children}
           <AIChatAssistant />
         </AuthProvider>

@@ -5,16 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Wallet, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
-import { PiNetworkService, type PiUser } from "@/lib/pi-network"
+import { isPiBrowser, isPiBrowserEnvironment, piLogin } from "@/src/pi"
+import type { PiUser } from "@/lib/pi-network"
 
 export function PiWalletConnector() {
-  const [isPiBrowser, setIsPiBrowser] = useState(false)
+  const [inPiBrowser, setInPiBrowser] = useState(false)
   const [piUser, setPiUser] = useState<PiUser | null>(null)
   const [isConnecting, setIsConnecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    setIsPiBrowser(PiNetworkService.isPiBrowser())
+    setInPiBrowser(!!(isPiBrowser() && isPiBrowserEnvironment()))
   }, [])
 
   const handleConnect = async () => {
@@ -22,13 +23,23 @@ export function PiWalletConnector() {
     setError(null)
 
     try {
-      const user = await PiNetworkService.authenticate()
+      if (!isPiBrowser() || !isPiBrowserEnvironment()) {
+        setError("Pi SDK not ready. افتح من Pi Browser أو Use Demo Mode")
+        return
+      }
+
+      const auth = await piLogin()
+      const user: PiUser = {
+        uid: auth.user.uid,
+        username: auth.user.username,
+        accessToken: auth.accessToken,
+      }
       setPiUser(user)
 
       // Save to localStorage
       localStorage.setItem("pi_user", JSON.stringify(user))
 
-      console.log("[v0] Pi user connected:", user)
+      console.log("[v0] Pi user connected:", user.username)
     } catch (err: any) {
       setError(err.message || "Failed to connect Pi wallet")
       console.error("[v0] Pi connection error:", err)
@@ -54,7 +65,7 @@ export function PiWalletConnector() {
     }
   }, [])
 
-  if (!isPiBrowser) {
+  if (!inPiBrowser) {
     return (
       <Card className="border-amber-500/20 bg-amber-500/5">
         <CardHeader>

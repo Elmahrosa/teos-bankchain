@@ -1,4 +1,6 @@
 // Pi Browser SDK integration
+import { isPiBrowser as isPiBrowserReady, piLogin } from "../../../src/pi"
+
 declare global {
   interface Window {
     Pi?: {
@@ -9,20 +11,9 @@ declare global {
   }
 }
 
-export const isPiBrowser = (): boolean => {
-  if (typeof window === "undefined") return false
-  return !!window.Pi
-}
+export const isPiBrowser = (): boolean => !!isPiBrowserReady()
 
-export const authenticateWithPi = async (): Promise<any> => {
-  if (!window.Pi) {
-    throw new Error("Pi SDK not available")
-  }
-
-  return await window.Pi.authenticate(["username", "payments"], (payment: any) => {
-    console.log("[v0] Incomplete payment found:", payment)
-  })
-}
+export const authenticateWithPi = async (): Promise<any> => piLogin()
 
 export const createPiPayment = (
   amount: number,

@@ -14,9 +14,10 @@ export function PiSdkInit() {
         handled = true
         const inPiBrowser = /PiBrowser/i.test(navigator.userAgent) || !!pi.environment
 
-        if (inPiBrowser && typeof pi.init === "function" && !pi.initialized) {
+        if (inPiBrowser && typeof pi.init === "function" && !(window as any).PI_READY && !pi.initialized) {
           try {
-            const result = pi.init({ version: "2.0", sandbox: false })
+            const result = pi.init({ version: "2.0", sandbox: true })
+            ;(window as any).PI_READY = true
             if (result && typeof result.catch === "function") {
               result.catch(() => {
                 // Ignore init failures outside a valid Pi Browser session.

@@ -1,4 +1,4 @@
-export type UserRole = "bank_admin" | "compliance_officer" | "operations" | "business" | "individual" | "agent"
+export type UserRole = "founder" | "bank_admin" | "compliance_officer" | "operations" | "business" | "individual" | "agent"
 
 export interface User {
   id: string

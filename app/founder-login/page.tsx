@@ -2,7 +2,6 @@
 
 import type React from "react"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,7 +15,6 @@ export default function FounderLoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,11 +34,21 @@ export default function FounderLoginPage() {
 
       const data = await response.json()
 
-      // Store founder session
+      // Store founder session in the same shape AuthService expects so the
+      // Founder Dashboard sees an authenticated founder after the redirect.
       localStorage.setItem("teos_founder_token", data.token)
       localStorage.setItem("teos_user", JSON.stringify(data.user))
+      localStorage.setItem(
+        "teos_auth_token",
+        JSON.stringify({
+          accessToken: data.token,
+          refreshToken: data.token,
+          expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+        }),
+      )
 
-      router.push("/founder-dashboard")
+      // Full navigation reloads AuthProvider with the founder session.
+      window.location.href = data.redirectUrl || "/founder-dashboard"
     } catch (err) {
       setError("Invalid founder credentials. Access denied.")
     } finally {

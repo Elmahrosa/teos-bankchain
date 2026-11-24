@@ -1,3 +1,5 @@
+import { isPiBrowser, piLogin } from "@/src/pi"
+
 export interface PiWalletConnection {
   userId: string
   piUserId: string
@@ -23,13 +25,8 @@ export class PiWalletService {
     }
 
     // Authenticate with Pi Network
-    if (typeof window !== "undefined" && (window as any).Pi) {
-      const piAuth = await (window as any).Pi.authenticate(
-        ["username", "payments", "wallet_address"],
-        (payment: any) => {
-          console.log("Incomplete payment found:", payment)
-        },
-      )
+    if (isPiBrowser()) {
+      const piAuth = await piLogin()
 
       const response = await fetch(`${this.API_URL}/pi/link-wallet`, {
         method: "POST",

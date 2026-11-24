@@ -1,5 +1,6 @@
 // Pi Network API Integration
 // Complete implementation for Pi Browser and backend API
+import { isPiBrowser as isPiBrowserReady, piLogin } from "@/src/pi"
 
 export interface PiUser {
   uid: string
@@ -25,25 +26,15 @@ export class PiNetworkService {
   private static walletSecret: string = process.env.PI_WALLET_SECRET || ""
   private static apiUrl = "https://api.minepi.com"
 
-  // Check if running in Pi Browser
+  // Check if running in Pi Browser with an initialized SDK
   static isPiBrowser(): boolean {
-    if (typeof window === "undefined") return false
-    return !!window.Pi
+    return !!isPiBrowserReady()
   }
 
   // Authenticate with Pi Network
   static async authenticate(): Promise<PiUser> {
-    if (!this.isPiBrowser()) {
-      throw new Error("Not running in Pi Browser. Please open in Pi app.")
-    }
-
     try {
-      const scopes = ["username", "payments", "wallet_address"]
-      const authResult = await window.Pi!.authenticate(scopes, (payment: any) => {
-        console.log("[v0] Incomplete payment found:", payment)
-        // Handle incomplete payment
-      })
-
+      const authResult = await piLogin()
       return {
         uid: authResult.user.uid,
         username: authResult.user.username,
@@ -58,7 +49,7 @@ export class PiNetworkService {
   // Create a payment request
   static createPayment(amount: number, memo: string, metadata: Record<string, any>): Promise<{ paymentId: string }> {
     return new Promise((resolve, reject) => {
-      if (!this.isPiBrowser()) {
+      if (!isPiBrowserReady()) {
         reject(new Error("Not running in Pi Browser"))
         return
       }
@@ -174,8 +165,9 @@ export class PiNetworkService {
 // Extend Window interface
 declare global {
   interface Window {
+    PI_READY?: boolean
     Pi?: {
-      authenticate: (scopes: string[], onIncompletePaymentFound: (payment: any) => void) => Promise<any>
+      authenticate: (scopes: string[], onIncompletePaymentFound: Function) => Promise<any>
       createPayment: (paymentData: any, callbacks: any) => void
       openShareDialog: (title: string, message: string) => void
     }

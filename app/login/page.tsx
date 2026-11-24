@@ -6,55 +6,82 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Building2, Wallet, AlertCircle, TestTube, Crown } from "lucide-react"
-import { PiNetworkService } from "@/lib/pi-network"
+import { isPiBrowser, isPiBrowserEnvironment, piLogin } from "@/src/pi"
 import { ContactBadge } from "@/components/contact-badge"
 import Link from "next/link"
 
 export default function LoginPage() {
   const [error, setError] = useState("")
+  const [piNotice, setPiNotice] = useState("")
+  const [piUsername, setPiUsername] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [sdkReady, setSdkReady] = useState(false)
 
   const { login } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    let attempts = 0
-    const maxAttempts = 15
-
-    const checkPiSDK = () => {
-      attempts++
-
-      if (typeof window !== "undefined" && window.Pi) {
-        setSdkReady(true)
-        return true
+    try {
+      const saved = localStorage.getItem("pi_user")
+      if (saved) {
+        const user = JSON.parse(saved)
+        if (user?.username) setPiUsername(user.username)
       }
-
-      if (attempts < maxAttempts) {
-        setTimeout(checkPiSDK, 500)
-      }
-
-      return false
+    } catch {
+      localStorage.removeItem("pi_user")
     }
-
-    const timer = setTimeout(checkPiSDK, 300)
-    return () => clearTimeout(timer)
   }, [])
 
   const handlePiWalletLogin = async () => {
     setError("")
+    setPiNotice("")
     setIsLoading(true)
 
     try {
-      if (!window.Pi) {
-        throw new Error("Pi SDK not available")
+      if (!isPiBrowser() || !isPiBrowserEnvironment()) {
+        setPiNotice("Pi SDK not ready. افتح من Pi Browser أو Use Demo Mode")
+        return
       }
 
-      const piUser = await PiNetworkService.authenticate()
+      const auth = await piLogin()
+      const piUser = {
+        uid: auth.user.uid,
+        username: auth.user.username,
+        accessToken: auth.accessToken,
+        walletAddress: (auth.user as any).walletAddress,
+      }
+
+      localStorage.setItem("pi_user", JSON.stringify(piUser))
+      setPiUsername(piUser.username)
 
       const founderWalletAddress = "GDIW2DXDR3DU4CYTRHDS3WYDGHMUQZG7E5FJWWW6XSADOC5VHMYRYD6F"
       const isFounder =
-        piUser.username.toLowerCase() === "aasm1969" || (piUser as any).walletAddress === founderWalletAddress
+        piUser.username.toLowerCase() === "aasm1969" || piUser.walletAddress === founderWalletAddress
+
+      if (isFounder) {
+        localStorage.setItem("teos_founder_token", piUser.accessToken)
+        localStorage.setItem(
+          "teos_user",
+          JSON.stringify({
+            id: piUser.uid,
+            email: `${piUser.username}@pi.network`,
+            name: piUser.username,
+            role: "founder",
+            permissions: ["*"],
+            walletIds: [piUser.uid],
+            primaryWalletId: piUser.uid,
+          }),
+        )
+        localStorage.setItem(
+          "teos_auth_token",
+          JSON.stringify({
+            accessToken: piUser.accessToken,
+            refreshToken: piUser.accessToken,
+            expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+          }),
+        )
+        window.location.href = "/founder-dashboard"
+        return
+      }
 
       await login(piUser.username, "", {
         usePiBrowser: true,
@@ -121,10 +148,22 @@ export default function LoginPage() {
             </Alert>
           )}
 
-          <Button onClick={handlePiWalletLogin} className="w-full h-12 text-base" disabled={isLoading || !sdkReady}>
+          {piNotice && (
+            <p className="text-sm text-center text-amber-700 dark:text-amber-300" role="status">
+              {piNotice}
+            </p>
+          )}
+
+          <Button onClick={handlePiWalletLogin} className="w-full h-12 text-base" disabled={isLoading}>
             <Wallet className="w-5 h-5 mr-2" />
-            {isLoading ? "Connecting..." : !sdkReady ? "Waiting for Pi SDK..." : "Connect Pi Wallet"}
+            {isLoading ? "Connecting..." : "Connect Pi Wallet"}
           </Button>
+
+          {piUsername && (
+            <p className="text-sm text-center text-muted-foreground" role="status">
+              Pi user: <span className="font-semibold text-foreground">@{piUsername}</span>
+            </p>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Button onClick={handleDemoMode} variant="outline" className="h-11 w-full bg-transparent" disabled={isLoading}>
